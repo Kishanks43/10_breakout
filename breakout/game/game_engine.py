@@ -25,6 +25,7 @@ BRICK_TOP_MARGIN = 50
 SCORE_PER_BRICK = 10
 
 
+
 class GameEngine:
     def __init__(self):
         self.paddle = Paddle(x=WIDTH / 2, y=HEIGHT - 30)
@@ -34,6 +35,7 @@ class GameEngine:
         self.game_over = False
         self.score = 0
         self.combo = 1
+        self.game_won = False
 
     def _build_bricks(self):
         bricks = []
@@ -70,7 +72,7 @@ class GameEngine:
         self.paddle.move(dx, WIDTH)
 
     def handle_keydown(self, key):
-        if key == pygame.K_r and self.game_over:
+        if key == pygame.K_r and (self.game_over or self.game_won):
             self.paddle = Paddle(x=WIDTH / 2, y=HEIGHT - 30)
             self._reset_ball()
             self.bricks = self._build_bricks()
@@ -78,9 +80,10 @@ class GameEngine:
             self.game_over = False
             self.score = 0
             self.combo = 1
+            self.game_won = False
 
     def update(self):
-        if self.game_over:
+        if self.game_over or self.game_won:
             return
 
         self.ball.update()
@@ -99,6 +102,9 @@ class GameEngine:
 
                         self.score += SCORE_PER_BRICK * self.combo
                         self.combo += 1
+
+                        if self._breakable_bricks_left() == 0:
+                            self.game_won = True
 
                 break
 
@@ -144,7 +150,14 @@ class GameEngine:
             (10, 85)
         )
 
-        if self.game_over:
+        if self.game_won:
+            renderer.draw_text(
+                surface,
+                font,
+                "YOU WIN - Press R to restart",
+                (WIDTH // 2 - 150, HEIGHT // 2)
+            )
+        elif self.game_over:
             renderer.draw_text(
                 surface,
                 font,
