@@ -36,11 +36,23 @@ class GameEngine:
         bricks = []
         total_width = BRICK_COLS * (BRICK_WIDTH + BRICK_GAP) - BRICK_GAP
         start_x = (WIDTH - total_width) / 2
+
         for row in range(BRICK_ROWS):
             for col in range(BRICK_COLS):
                 x = start_x + col * (BRICK_WIDTH + BRICK_GAP)
                 y = BRICK_TOP_MARGIN + row * (BRICK_HEIGHT + BRICK_GAP)
-                bricks.append(Brick(x, y, BRICK_WIDTH, BRICK_HEIGHT))
+
+                if row == 0:
+                    brick_type = Brick.UNBREAKABLE
+                elif row == 1:
+                    brick_type = Brick.STRONG
+                else:
+                    brick_type = Brick.NORMAL
+
+                bricks.append(
+                    Brick(x, y, BRICK_WIDTH, BRICK_HEIGHT, brick_type)
+                )
+
         return bricks
 
     def _reset_ball(self):
@@ -74,10 +86,11 @@ class GameEngine:
 
         for brick in self.bricks:
             if handle_ball_brick_collision(self.ball, brick):
-                brick.hits_remaining -= 1
+                if brick.is_breakable:
+                    brick.hits_remaining -= 1
 
-                if brick.hits_remaining <= 0:
-                    self.bricks.remove(brick)
+                    if brick.hits_remaining <= 0:
+                        self.bricks.remove(brick)
 
                 break
 
@@ -97,7 +110,7 @@ class GameEngine:
         renderer.draw_text(
             surface,
             font,
-            f"Bricks left: {len(self.bricks)}",
+            f"Bricks left: {self._breakable_bricks_left()}",
             (10, 10)
         )
 
@@ -115,3 +128,6 @@ class GameEngine:
                 "GAME OVER - Press R to restart",
                 (WIDTH // 2 - 150, HEIGHT // 2)
             )
+
+    def _breakable_bricks_left(self):
+        return sum(1 for brick in self.bricks if brick.is_breakable)
