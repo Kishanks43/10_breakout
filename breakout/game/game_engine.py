@@ -22,6 +22,7 @@ BRICK_WIDTH = 68
 BRICK_HEIGHT = 22
 BRICK_GAP = 6
 BRICK_TOP_MARGIN = 50
+SCORE_PER_BRICK = 10
 
 
 class GameEngine:
@@ -31,6 +32,8 @@ class GameEngine:
         self.bricks = self._build_bricks()
         self.lives = 3
         self.game_over = False
+        self.score = 0
+        self.combo = 1
 
     def _build_bricks(self):
         bricks = []
@@ -73,6 +76,8 @@ class GameEngine:
             self.bricks = self._build_bricks()
             self.lives = 3
             self.game_over = False
+            self.score = 0
+            self.combo = 1
 
     def update(self):
         if self.game_over:
@@ -92,10 +97,14 @@ class GameEngine:
                     if brick.hits_remaining <= 0:
                         self.bricks.remove(brick)
 
+                        self.score += SCORE_PER_BRICK * self.combo
+                        self.combo += 1
+
                 break
 
         if self.ball.is_below(HEIGHT):
             self.lives -= 1
+            self.combo = 1
 
             if self.lives <= 0:
                 self.game_over = True
@@ -110,15 +119,29 @@ class GameEngine:
         renderer.draw_text(
             surface,
             font,
-            f"Bricks left: {self._breakable_bricks_left()}",
+            f"Score: {self.score}",
             (10, 10)
         )
 
         renderer.draw_text(
             surface,
             font,
-            f"Lives: {self.lives}",
+            f"Multiplier: x{self.combo}",
             (10, 35)
+        )
+
+        renderer.draw_text(
+            surface,
+            font,
+            f"Bricks left: {self._breakable_bricks_left()}",
+            (10, 60)
+        )
+
+        renderer.draw_text(
+            surface,
+            font,
+            f"Lives: {self.lives}",
+            (10, 85)
         )
 
         if self.game_over:
